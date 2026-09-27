@@ -30,6 +30,8 @@ import { moonshot } from './moonshot.ts';
 import { mistral } from './mistral.ts';
 import { nvidia } from './nvidia.ts';
 import { perplexity } from './perplexity.ts';
+import { cloudflare } from './cloudflare.ts';
+import { cloudflareRerank } from './cloudflare-rerank.ts';
 
 const ALL: Recipe[] = [
   openai,
@@ -56,6 +58,8 @@ const ALL: Recipe[] = [
   mistral,
   nvidia,
   perplexity,
+  cloudflare,
+  cloudflareRerank,
 ];
 
 /** Map from `provider:id` key to recipe. */
