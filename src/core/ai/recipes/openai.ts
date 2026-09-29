@@ -78,7 +78,7 @@ export const openai: Recipe = {
       // gpt-5.2 stays listed: the cross-modal + takes-quality eval judge
       // panels pin it for baseline reproducibility, and their recipe-
       // consistency guards require panel models to be listed entry points.
-      models: ['gpt-5.6', 'gpt-5.6-terra', 'gpt-5.6-luna', 'gpt-5.5', 'gpt-5.2', 'gpt-4o-mini'],
+      models: ['gpt-5.6', 'gpt-5.6-terra', 'gpt-5.6-luna', 'gpt-5.5', 'gpt-5.2', 'gpt-4o-mini', 'MiniMax-M3.1-Flash-Preview'],
       supports_tools: true,
       supports_subagent_loop: true,
       supports_prompt_cache: openaiModelSupportsPromptCache,
