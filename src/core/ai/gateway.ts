@@ -2783,7 +2783,12 @@ export const THINKING_MODEL_MAX_OUTPUT_TOKENS = 32000;
 // `claude-cli:claude-fable-5`, bare `claude-sonnet-5`). The family segment is
 // letters-only so `claude-3-5-sonnet-*` (an 8192-capped 3.5-family id) can
 // never match — pushing 32k onto it would 400 on Anthropic.
-const THINKING_BY_DEFAULT_MODEL_RE = /(?:^|[:/])(?:anthropic[:/])?claude-[a-z]+-5(?:[.-]|$)/i;
+// MiniMax-M3.1-Flash-Preview is also thinking-by-default (cannot be disabled;
+// default effort is `max`) and consumes the full 4k default output cap on
+// reasoning_content before emitting any final text, leaving the answer at
+// finish_reason "length". Promote it to the 32k cap so a structured-output
+// call lands inside the model's actual budget.
+const THINKING_BY_DEFAULT_MODEL_RE = /(?:^|[:/])(?:anthropic[:/])?claude-[a-z]+-5(?:[.-]|$)|MiniMax-M3\.1-Flash-Preview(?:[.-]|$)/i;
 export function isThinkingByDefaultModel(modelStr: string | undefined): boolean {
   return !!modelStr && THINKING_BY_DEFAULT_MODEL_RE.test(modelStr);
 }
@@ -3543,6 +3548,20 @@ export async function chat(opts: ChatOpts): Promise<ChatResult> {
       toolNames: (opts.tools ?? []).map(t => t.name),
     });
     if (promptCacheKey) providerOptions.openai = { promptCacheKey };
+  }
+  // OpenAI-compatible reasoning_effort passthrough. Some providers on the
+  // openai-compat surface (e.g. MiniMax M3.1-Flash-Preview) default thinking
+  // to `max` and burn the entire 4k output budget on reasoning_content before
+  // emitting any text, which makes synthesize's structured-output call
+  // truncate with finish_reason "length". GBRAIN_REASONING_EFFORT (low |
+  // medium | high | xhigh | max) forwards to the AI SDK's openai namespace
+  // and reaches the wire as `reasoning_effort`. No-op when unset.
+  const reasoningEffort = (process.env.GBRAIN_REASONING_EFFORT ?? '').trim();
+  if (reasoningEffort && recipe.implementation === 'native-openai') {
+    providerOptions.openai = {
+      ...(providerOptions.openai ?? {}),
+      reasoningEffort,
+    };
   }
   applyConfiguredChatProviderOptions(providerOptions, cfg, recipe.id, modelId);
   // Call-scoped options merge last so they win over configured siblings.
