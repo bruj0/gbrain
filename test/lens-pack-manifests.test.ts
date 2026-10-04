@@ -249,14 +249,20 @@ describe('v0.41 T4: gbrain-everything meta-pack shape', () => {
 // #2117 — gbrain-base-v2 must ship the NER inference regexes. gbrain-base
 // (v1) ships 4 (founded/invested_in/advises/works_at); pre-fix v2 shipped
 // ZERO, so extract-ner returned pack_unavailable and NER was inert for any
-// brain on the default successor pack. The explicit `phases: []` documents
-// that lens-pack cycle phases (extract_atoms, synthesize_concepts) stay
-// opt-in via lens packs or a manifest edit.
+// brain on the default successor pack. The `phases` list is load-bearing
+// separately: upstream ships it EMPTY so lens-pack cycle phases
+// (extract_atoms, synthesize_concepts) stay opt-in.
+//
+// FORK DIVERGENCE (this is not upstream's assertion): this fork opts the
+// base pack into extract_atoms via the escape hatch #2117's own comment
+// sanctions ("add the phase name to this list in a fork"). Upstream asserts
+// `[]` here; assert the real fork value and keep synthesize_concepts out, so
+// a future upstream sync that re-adds the phase cannot silently widen scope.
 describe('#2117: gbrain-base-v2 ships link-inference regexes + explicit phases', () => {
   const pack = loadPack('gbrain-base-v2');
 
-  test('version bumped to 1.2.0 (open-loop link verbs owes_to/awaiting_reply_from)', () => {
-    expect(pack.version).toBe('1.2.0');
+  test('version bumped to 1.2.1 (fork: opts into extract_atoms)', () => {
+    expect(pack.version).toBe('1.2.1');
   });
 
   test('declares the 4 v1 inference regexes (founded/invested_in/advises/works_at)', () => {
@@ -269,8 +275,8 @@ describe('#2117: gbrain-base-v2 ships link-inference regexes + explicit phases',
     }
   });
 
-  test('declares an explicit (empty) phases list — lens packs opt in', () => {
+  test('declares extract_atoms and NOT synthesize_concepts (fork opt-in)', () => {
     expect(pack.phases).toBeDefined();
-    expect(pack.phases).toEqual([]);
+    expect(pack.phases).toEqual(['extract_atoms']);
   });
 });
